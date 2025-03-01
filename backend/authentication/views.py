@@ -87,7 +87,7 @@ class UserRetriveUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = UserSerializer
     queryset = User.objects.all()
     # For handling profile picture upload
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         return self.request.user
@@ -95,14 +95,17 @@ class UserRetriveUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         user = self.get_object()
         data = request.data
-        
+       
+        # Handle file upload if present
+        if request.content_type.startswith("multipart"):
+            
         # Check if a new profile picture is being uploaded
-        if 'profile_picture' in request.FILES:
-            # Delete old profile picture
-            if user.profile_picture:
-                old_picture_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
-                if os.path.exists(old_picture_path):
-                    os.remove(old_picture_path)
+            if 'profile_picture' in request.FILES:
+                # Delete old profile picture
+                if user.profile_picture:
+                    old_picture_path = os.path.join(settings.MEDIA_ROOT, str(user.profile_picture))
+                    if os.path.exists(old_picture_path):
+                        os.remove(old_picture_path)
 
         serializer = self.get_serializer(user, data=data, partial=True)
 
