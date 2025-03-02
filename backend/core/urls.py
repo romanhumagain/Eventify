@@ -7,13 +7,16 @@ from rest_framework_simplejwt.views import (
 )
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/user/', include('authentication.urls')),
-    path('api/', include('events.urls')),
-    path('api/notifications/', include('notification.urls')),
-
+    path("admin/", admin.site.urls),
+    path("api/user/", include("authentication.urls")),
+    path("api/events/", include("events.urls")),
+    path("api/notifications/", include("notification.urls")),
+    path("api/feedback/", include("feedback.urls")),
+    path("api/tickets/", include("tickets.urls")),
+    path("api/rsvps/", include("rsvp.urls")),
+    
     # JWT Token
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
 ]
 
 if settings.DEBUG:

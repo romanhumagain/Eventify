@@ -18,19 +18,23 @@ class OrganizerSerializer(serializers.ModelSerializer):
 class EventSerializer(serializers.ModelSerializer):
     category_name = serializers.SerializerMethodField(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
-    
+
     is_upcoming = serializers.SerializerMethodField(read_only=True)
     is_active = serializers.SerializerMethodField(read_only=True)
     is_expired = serializers.SerializerMethodField(read_only=True)
 
+    tickets_sold = serializers.IntegerField(read_only=True)
+    tickets_available = serializers.IntegerField( read_only=True)
+
     class Meta:
         model = Event
         fields = [
-            'id', 'banner', 'title', 'subtitle', 'description', 'is_online', 'start_date', 
-            'end_date', 'location', 'category', 'price', 'created_at', 
-            'updated_at', 'organizer', 'category_name', 'is_upcoming', 'is_active', 'is_expired'
+            'id', 'banner', 'title', 'subtitle', 'description', 'event_type', 'is_free', 'price',
+            'start_date', 'end_date', 'booking_deadline', 'location', 'online_link', 
+            'category', 'category_name', 'total_tickets', 'tickets_sold', 'tickets_available',
+            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'category_name']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'category_name', 'tickets_sold', 'tickets_available']
 
     def get_category_name(self, obj):
         return obj.category.name if obj.category else None

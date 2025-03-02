@@ -90,9 +90,9 @@ class EventListCreateAPIView(generics.ListCreateAPIView):
         
         # Event type filter
         if event_type == "online":
-            queryset = queryset.filter(is_online=True)
+            queryset = queryset.filter(event_type__icontains = "online")
         elif event_type == "physical":
-            queryset = queryset.filter(is_online=False)
+            queryset = queryset.filter(event_type__icontains = "physical")
 
         # Price filter
         if price_filter == "free":

@@ -29,7 +29,7 @@ class LoginAPIView(APIView):
             user = User.objects.filter(email=email).first()
             if not user:
                 return Response(
-                    {"error": "User with this email does not exist."},
+                    {"detail": "User with this email does not exist."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
@@ -48,7 +48,7 @@ class LoginAPIView(APIView):
                 return Response(response_data, status=status.HTTP_200_OK)
 
             return Response(
-                {"error": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Invalid credentials."}, status=status.HTTP_400_BAD_REQUEST
             )
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -122,6 +122,6 @@ class UserRetriveUpdateDeleteAPIView(RetrieveUpdateDestroyAPIView):
         user.is_active = False
         user.save()
         return Response(
-            {"detail": "User profile deleted successfully."},
-            status=status.HTTP_200_OK,
+            {"message": "User profile deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT,
         )

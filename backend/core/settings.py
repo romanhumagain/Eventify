@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     "events",
     "notification",
     "feedback",
+    "tickets",
+    "rsvp"
 ]
 
 EXTERNAL_APPS = [
