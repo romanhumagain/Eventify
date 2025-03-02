@@ -5,7 +5,7 @@ from datetime import datetime
 
 class EventCategory(models.Model):
   name = models.CharField(max_length=200)
-  descritpion = models.TextField(null=True, blank=True)
+  description = models.TextField(null=True, blank=True)
 
   class Meta:
     verbose_name = "Event Category"
@@ -30,18 +30,15 @@ class Event(models.Model):
   created_at = models.DateTimeField(auto_now_add=True)
   updated_at = models.DateTimeField(auto_now=True)
   
-  # to check if the event is active or not
-  @property
-  def is_active(self):
-      now = datetime.now()
-      return self.start_date <= now <= self.end_date
-
-  # Check if the event is upcoming 
-  @property
-  def is_upcoming(self):
-      now = datetime.now()
-      return self.start_date > now
   
+  class Meta:
+    constraints = [
+        models.UniqueConstraint(
+            fields=['organizer', 'title', 'start_date'],
+            name='unique_event_per_organizer'
+        )
+    ]
+    
   def clean(self):
     if self.start_date >= self.end_date:
       raise ValidationError("End date must be after the start date.")

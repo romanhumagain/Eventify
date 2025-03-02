@@ -17,4 +17,4 @@ def event_approved(sender, instance, created, **kwargs):
                 )
                 notification.save()
                 # Send email to Organizer for event approval
-                send_event_approval_mail(instance.title, instance.organizer)
+                # send_event_approval_mail(instance.title, instance.organizer)
