@@ -6,7 +6,8 @@ router = routers.DefaultRouter()
 router.register(r'', NotificationViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('mark-all-as-read/', MarkAllAsReadView.as_view(), name='mark-all-as-read'),
+    path('mark-all-as-read/', MarkAllAsReadView.as_view(), name='markallread'),
     path('mark-as-read/<int:id>/', MarkAsReadView.as_view({'put': 'update'}), name='mark-as-read'),
 ]
+
+urlpatterns += router.urls

@@ -23,16 +23,12 @@ class MarkAsReadView(viewsets.ViewSet):
             notification.is_read = True
             notification.save()
             return Response({"detail": "Notification marked as read."}, status=status.HTTP_200_OK)
-        return Response({"error": "Notification not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"detail": "Notification not found."}, status=status.HTTP_404_NOT_FOUND)
      
-     
-      
 class MarkAllAsReadView(APIView):
     permission_classes = [IsAuthenticated]
-
+  
     def put(self, request):
-        print("MarkAll - PUT request received")
-
         # Mark all unread notifications for the current user as read
         notifications = Notification.objects.filter(user=request.user, is_read=False)
         print(f"Found {notifications.count()} unread notifications.")
