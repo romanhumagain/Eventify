@@ -10,9 +10,8 @@ class UserFeedbackSerializer(serializers.ModelSerializer):
         fields = ['first_name', 'last_name', 'profile_picture', 'username']
         
 class FeedbackSerializer(serializers.ModelSerializer):
-    user = UserFeedbackSerializer()
+    user_details = UserFeedbackSerializer(source='user', read_only=True)
     class Meta:
         model = Feedback
-        fields = ['id', 'user', 'event', 'rating', 'comment','created_at' ]
-        
-        read_only_fields = ['id', 'created_at' ]
+        fields = ['id', 'event', 'user', 'rating', 'comment', 'created_at', 'user_details']
+        read_only_fields = ['id', 'created_at', 'user_details','event', 'user']
