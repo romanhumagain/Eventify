@@ -8,7 +8,7 @@ from rest_framework.permissions import (
 )
 from rest_framework.response import Response
 from .models import Event, EventCategory, SavedEvent
-from .serializers import EventSerializer, EventCategorySerializer, SavedEventSerializer
+from .serializers import EventSerializer, EventCategorySerializer, SavedEventSerializer, OwnEventSerializer
 from rest_framework import generics
 from datetime import timedelta
 from .permissions import IsOwnerOrReadOnly, IsSuperuserOrReadOnly
@@ -114,7 +114,7 @@ class EventListCreateAPIView(generics.ListCreateAPIView):
 # to list all the self posted event (filter option for is_approved or not )
 class MyEventListAPIView(generics.ListAPIView):
     queryset = Event.objects.all()
-    serializer_class = EventSerializer
+    serializer_class = OwnEventSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -132,12 +132,19 @@ class MyEventListAPIView(generics.ListAPIView):
                 pass
 
         return queryset
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request 
+        return context
+    
+    
 
 
 # to retrieve spicific event, update and delete an event
 class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
-    serializer_class = EventSerializer
+    serializer_class = OwnEventSerializer
     permission_classes = [IsOwnerOrReadOnly]
     lookup_field = "id"
 
@@ -145,6 +152,12 @@ class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         obj = super().get_object()
         self.check_object_permissions(self.request, obj)
         return obj
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request 
+        return context
+    
     
   
     

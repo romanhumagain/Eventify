@@ -42,8 +42,6 @@ class Ticket(models.Model):
     class Meta:
         unique_together = ('user', 'event')
 
-    
-    
 class TicketQR(models.Model):
     ticket = models.ForeignKey(Ticket, on_delete=models.CASCADE, related_name='qr_codes')
     qr_code_data = models.CharField(max_length=255, unique=True) 
