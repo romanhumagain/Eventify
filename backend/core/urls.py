@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/feedback/", include("feedback.urls")),
     path("api/tickets/", include("tickets.urls")),
     path("api/rsvps/", include("rsvp.urls")),
+    path("api/payments/", include("payments.urls")),
     
     # JWT Token
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),

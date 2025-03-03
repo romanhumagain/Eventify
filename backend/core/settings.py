@@ -25,6 +25,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY")
+STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
@@ -54,6 +55,7 @@ EXTERNAL_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     'rest_framework_simplejwt.token_blacklist',
+    'stripe'
 ]
 
 INSTALLED_APPS += EXTERNAL_APPS
