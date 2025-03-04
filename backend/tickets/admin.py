@@ -15,7 +15,7 @@ class TicketAdmin(admin.ModelAdmin):
     ordering = ('-purchase_date',)
     
     # Make some fields read-only (for example, ticket_code and purchase_date)
-    readonly_fields = ('ticket_code', 'purchase_date', 'payment_id')
+    readonly_fields = ('ticket_code', 'purchase_date')
 
 # Register the customized admin for Ticket model
 admin.site.register(Ticket, TicketAdmin)
