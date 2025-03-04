@@ -49,4 +49,5 @@ class StripeService:
                 'metadata': intent.metadata
             }
         except Exception as e:
+            print("error in confirm payment")
             return {'error': str(e), 'success': False}
