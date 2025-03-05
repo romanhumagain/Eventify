@@ -1,11 +1,11 @@
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView, DestroyAPIView
+from rest_framework.generics import CreateAPIView, DestroyAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated
-from .serializers import TicketSerializer
+from .serializers import TicketSerializer, TicketQRSerializer
 from events.models import Event
 from rest_framework import status
 from rest_framework.views import APIView
-from.models import Ticket
+from.models import Ticket, TicketQR
 
 class PurchaceTicketAPIView(CreateAPIView):
   permission_classes = [IsAuthenticated]
@@ -55,4 +55,33 @@ class CancelTicketAPIView(APIView):
         return Response({'detail': 'Ticket successfully cancelled.'}, status=status.HTTP_200_OK)
 
 
+# to get the ticket history details 
+class TicketHistoryAPIView(ListAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = TicketQRSerializer
   
+  def get(self, request, *args, **kwargs):
+    ticketQRs = TicketQR.objects.filter(ticket__user = request.user).order_by('is_checked_in')
+    serializer = self.get_serializer(ticketQRs, many = True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+  
+  
+# to validate and checkin QR by the organizer
+class ValidateQRAPIView(CreateAPIView):
+  permission_classes = [IsAuthenticated]
+  
+  def post(self, request, *args, **kwargs):
+     qr_code_data = request.data.get('qr_code_data')
+     try:
+       ticketQR = TicketQR.objects.get(qr_code_data=qr_code_data)
+     except TicketQR.DoesNotExist:
+       return Response({'detail':"QR doesn't exists"}, status=status.HTTP_400_BAD_REQUEST)
+     
+     if ticketQR.is_checked_in:
+       return Response({'detail':"Ticket already checked in."}, status= status.HTTP_400_BAD_REQUEST)
+     
+     ticketQR.is_checked_in = True
+     ticketQR.save()
+     return Response({'detail':'Ticket successfully checked in.'}, status=status.HTTP_200_OK)
+     
+     

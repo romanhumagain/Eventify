@@ -47,7 +47,6 @@ class Ticket(models.Model):
         unique_together = ('user', 'event')
 
 
-
 class TicketQR(models.Model):
     from tickets.models import Ticket
     
