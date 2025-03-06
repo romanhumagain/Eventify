@@ -3,14 +3,15 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .manager import UserManager
 
 class User(AbstractBaseUser, PermissionsMixin):
+  
   # required fields for registration
-  first_name = models.CharField(max_length = 100)
-  last_name = models.CharField(max_length = 100)
-  username = models.CharField(unique=True, max_length=100)
+  username = models.CharField(unique=True, max_length=25)
   email = models.EmailField(unique = True)
   password = models.CharField(max_length = 100)
   
   # optional for profile
+  first_name = models.CharField(max_length = 100, null=True, blank=True)
+  last_name = models.CharField(max_length = 100, null=True, blank=True)
   profile_picture = models.ImageField(upload_to = 'profile_pictures/', blank = True, null = True)
   phone_number = models.CharField(max_length = 15,unique=True, blank = True, null = True)
   address = models.CharField(max_length = 255, blank = True, null = True)
@@ -34,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
   objects = UserManager()
   
   def __str__(self):
-    return self.email
+    return self.username
   
   
   

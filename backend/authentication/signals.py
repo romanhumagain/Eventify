@@ -8,5 +8,5 @@ from utils.send_email import send_welcome_email
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
-      send_welcome_email(instance.email, instance.first_name)
+      send_welcome_email(instance.email, instance.username)
        
