@@ -2,118 +2,53 @@
 
 This documentation provides details on how the frontend can integrate the Notifications API. It includes endpoints, required fields, response structures, and authentication requirements.
 
-## Base URL
-```
-/api/notifications/
-```
+# Notification API Documentation
 
-## Authentication
-All endpoints require authentication using a valid JWT token in the `Authorization` header.
+## Endpoints Overview
 
-### Headers:
-```json
-{
-  "Authorization": "Bearer <your_access_token>"
-}
-```
+| Endpoint                                      | Method | Description                                                   |
+|-----------------------------------------------|--------|---------------------------------------------------------------|
+| `/api/notifications/`                         | GET    | Retrieve all notifications for the authenticated user with latest details at first.        |
+| `/api/notifications/mark-all-as-read/`        | PUT    | Mark all unread notifications as read for the authenticated user. |
+| `/api/notifications/mark-as-read/<id>/`       | PUT    | Mark a specific notification as read for the authenticated user by providing notification id. |
 
 ---
 
-## Endpoints
+## Retrieve Notifications
 
-### 1. Get All Notifications
-**Endpoint:**
-```
-GET /api/notifications/
-```
+### Endpoint
+`GET /api/notifications/`
 
-**Description:**
-Fetches all notifications for the authenticated user, ordered by the latest.
 
-**Response:**
+`GET /api/notifications/?is_read=false` **Note:** This endpoint will provide all the notification for the user which are not read. This helps to count the unread notification. 
+
+### Query Parameters
+| Parameter  | Type    | Required | Description                               |
+|------------|---------|----------|-------------------------------------------|
+| `is_read`  | boolean | No       | Filter notifications by read status (`true` or `false`) |
+
+### Headers
+| Key           | Value                         |
+|---------------|-------------------------------|
+| Authorization | Bearer `<access_token>`        |
+
+### Response
 ```json
 [
   {
     "id": 1,
-    "message": "Your event has been approved!",
+    "event": 10,  
+    "message": "Your event 'Tech Conference' is starting soon.",
     "is_read": false,
-    "created_at": "2024-03-04T10:15:30Z"
+    "created_at": "2025-03-08T10:30:00Z"
   },
   {
     "id": 2,
-    "message": "New comment on your post!",
+    "event": 11,
+    "message": "New ticket assigned to you for 'Project Update'.",
     "is_read": true,
-    "created_at": "2024-03-03T08:45:00Z"
+    "created_at": "2025-03-08T09:00:00Z"
   }
 ]
-```
 
----
-
-### 2. Mark a Notification as Read
-**Endpoint:**
-```
-PUT /api/notifications/mark-as-read/{id}/
-```
-
-**Description:**
-Marks a specific notification as read.
-
-**Request Example:**
-```
-PUT /api/notifications/mark-as-read/1/
-```
-
-**Response:**
-```json
-{
-  "detail": "Notification marked as read."
-}
-```
-
-**Error Response:**
-```json
-{
-  "detail": "Notification not found."
-}
-```
-
----
-
-### 3. Mark All Notifications as Read
-**Endpoint:**
-```
-PUT /api/notifications/mark-all-as-read/
-```
-
-**Description:**
-Marks all unread notifications for the authenticated user as read.
-
-**Response:**
-```json
-{
-  "detail": "All notifications marked as read."
-}
-```
-
----
-
-## Field Descriptions
-
-| Field       | Type    | Description |
-|-------------|---------|-------------|
-| `id`        | Integer | Unique ID of the notification |
-| `message`   | String  | Notification message |
-| `is_read`   | Boolean | Status of the notification (read/unread) |
-| `created_at`| String  | Timestamp when the notification was created |
-
----
-
-## Notes
-- All endpoints require authentication.
-- Notifications are user-specific; users can only access their own notifications.
-- `is_read` status helps in distinguishing between read and unread notifications.
-- The `mark-all-as-read` endpoint updates all unread notifications in bulk.
-
-This documentation should assist the frontend developer in seamlessly integrating the Notifications API into their application.
 

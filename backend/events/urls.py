@@ -3,7 +3,7 @@ from rest_framework import routers
 from .views import EventCategoryViewSet, EventListCreateAPIView, EventRetrieveUpdateDestroyView, MyEventListAPIView, SavedEventListAPIView, SavedEventToggleAPIView
 
 router = routers.DefaultRouter()
-router.register(r'event-categories', EventCategoryViewSet)
+router.register(r'categories', EventCategoryViewSet)
 
 
 urlpatterns = [
@@ -12,7 +12,7 @@ urlpatterns = [
     path('my-events/', MyEventListAPIView.as_view(), name='my-events'),
     
     path('saved/', SavedEventListAPIView.as_view(), name='saved-events-list'),
-    path('saved/<int:event_id>/', SavedEventToggleAPIView.as_view(), name='toggle-save-event'),
+    path('toggle-save/<int:event_id>/', SavedEventToggleAPIView.as_view(), name='toggle-save-event'),
 ]
 
 urlpatterns += router.urls

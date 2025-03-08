@@ -1,157 +1,139 @@
 # Feedback API Documentation
 
 ## Base URL
+`http://127.0.0.1:8000/api/feedback/`
+
+## Overview
+This API allows users to submit feedback for events, retrieve feedback, update their feedback, or delete it. Feedback is associated with events and users. Only authenticated users can access these endpoints.
+
+## Authentication
+All endpoints require the user to be authenticated. You must include an access token in the header of the request:
 ```
-http://127.0.0.1:8000/api
+Authorization: Bearer <your_access_token>
 ```
 
 ## Endpoints
 
-### 1. Submit Feedback for an Event
+### 1. **List and Create Feedback for an Event**
+
 **Endpoint:**
-```
-POST /api/feedback/event/{event_id}/
-```
-**Description:**
-User should be logged in to view the feedback
-Allows an authenticated user to submit feedback for a specific event.
+- `GET /api/feedback/event/<event_id>/`
+- `POST /api/feedback/event/<event_id>/`
 
-**Required Fields:**
-- `rating` (integer, required): Rating value (1 to 5).
-- `comment` (string, optional): Additional comments.
+**Description:** 
+- `GET` retrieves all feedback for a specific event.
+- `POST` allows a user to submit feedback for an event.
+  
+**URL Parameters:**
+- `event_id` (integer, required): The ID of the event for which feedback is being submitted or retrieved.
 
-**Example Request:**
+**Request Body for POST:**
 ```json
 {
-  "rating": 5,
-  "comment": "Great event! Very well organized."
+  "message": "Great event, really enjoyed it!"
 }
 ```
 
 **Response:**
-```json
-{
-  "id": 1,
-  "event": 3,
-  "user": 7,
-  "rating": 5,
-  "comment": "Great event! Very well organized.",
-  "created_at": "2024-03-04T12:00:00Z",
-  "user_details": {
-    "first_name": "John",
-    "last_name": "Doe",
-    "profile_picture": "http://yourdomain.com/media/profile.jpg",
-    "username": "johndoe"
-  }
-}
-```
 
-### 2. Get All Feedback for an Event
-**Endpoint:**
-```
-GET /api/feedback/event/{event_id}/
-```
-**Description:**
-Retrieves all feedback related to a specific event.
-
-**Response:**
+GET Response:
 ```json
 [
   {
     "id": 1,
-    "event": 3,
+    "event": 5,
     "user": 7,
-    "rating": 5,
-    "comment": "Great event!",
+    "message": "Great event, really enjoyed it!",
     "created_at": "2024-03-04T12:00:00Z",
     "user_details": {
-      "first_name": "John",
-      "last_name": "Doe",
-      "profile_picture": "http://yourdomain.com/media/profile.jpg",
-      "username": "johndoe"
-    }
-  },
-  {
-    "id": 2,
-    "event": 3,
-    "user": 8,
-    "rating": 4,
-    "comment": "Well planned event!",
-    "created_at": "2024-03-04T13:00:00Z",
-    "user_details": {
-      "first_name": "Jane",
-      "last_name": "Smith",
-      "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/pp.jpg",
-      "username": "janesmith"
+      "username": "john_doe",
+      "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
     }
   }
 ]
 ```
 
-### 3. Get, Update, or Delete a User's Feedback
-**Endpoints:**
-```
-GET /api/feedback/{feedback_id}/
-PUT /api/feedback/{feedback_id}/
-DELETE /api/feedback/{feedback_id}/
-```
-**Description:**
-- `GET`: Retrieves a specific feedback entry.
-- `PUT`: Updates the feedback (only the owner can update).
-- `DELETE`: Deletes the feedback (only the owner can delete).
-
-**Required Fields for Update (PUT):**
-- `rating` (integer, required): Updated rating value (1 to 5).
-- `comment` (string, optional): Updated comment.
-
-**Example Update Request:**
-```json
-{
-  "rating": 4,
-  "comment": "The event was good, but could be improved."
-}
-```
-
-**Example Update Response:**
+POST Response:
 ```json
 {
   "id": 1,
-  "event": 3,
+  "event": 5,
   "user": 7,
-  "rating": 4,
-  "comment": "The event was good, but could be improved.",
+  "message": "Great event, really enjoyed it!",
   "created_at": "2024-03-04T12:00:00Z",
   "user_details": {
-    "first_name": "John",
-    "last_name": "Doe",
-    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/pp.jpg",
-    "username": "johndoe"
+    "username": "john_doe",
+    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
   }
 }
 ```
 
-**Example Delete Response:**
+**Error Responses:**
+- `400 Bad Request`: Missing or invalid fields.
+- `401 Unauthorized`: User is not authenticated.
+- `403 Forbidden`: User is the organizer of the event and cannot submit feedback for their own event.
+
+### 2. **Retrieve, Update, and Delete Feedback**
+
+**Endpoint:**
+- `GET /api/feedback/<feedback_id>/`
+- `PUT /api/feedback/<feedback_id>/`
+- `DELETE /api/feedback/<feedback_id>/`
+
+**Description:**
+- `GET` retrieves a specific feedback entry.
+- `PUT` allows the user to update their own feedback.
+- `DELETE` allows the user to delete their own feedback.
+
+**URL Parameters:**
+- `feedback_id` (integer, required): The ID of the feedback to retrieve, update, or delete.
+
+**Response for GET:**
+```json
+{
+  "id": 1,
+  "event": 5,
+  "user": 7,
+  "message": "Great event, really enjoyed it!",
+  "created_at": "2024-03-04T12:00:00Z",
+  "user_details": {
+    "username": "john_doe",
+    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
+  }
+}
+```
+
+**Request Body for PUT (Update):**
+```json
+{
+  "message": "It was an amazing event, would love to attend again!"
+}
+```
+
+**Response for PUT (Update):**
+```json
+{
+  "id": 1,
+  "event": 5,
+  "user": 7,
+  "message": "It was an amazing event, would love to attend again!",
+  "created_at": "2024-03-04T12:00:00Z",
+  "user_details": {
+    "username": "john_doe",
+    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
+  }
+}
+```
+
+**Response for DELETE:**
 ```json
 {
   "detail": "Feedback deleted successfully."
 }
 ```
 
-## Authentication
-- All endpoints require authentication.
-- Users must be logged in and provide an authentication token in the `Authorization` header:
-```
-Authorization: Bearer <your_access_token>
-```
-
-## Error Responses
-- `400 Bad Request`: If required fields are missing or invalid.
-- `401 Unauthorized`: If the user is not authenticated.
-- `403 Forbidden`: If the user does not have permission to perform the action.
-- `404 Not Found`: If the event or feedback does not exist.
-
-## Notes
-- Users cannot submit feedback for their own events.
-- Users can update or delete only their own feedback.
-- Feedback is ordered by `created_at` in descending order.
-
+**Error Responses:**
+- `400 Bad Request`: Invalid fields.
+- `401 Unauthorized`: User is not authenticated.
+- `403 Forbidden`: User is not the owner of the feedback.
+- `404 Not Found`: The requested feedback does not exist.

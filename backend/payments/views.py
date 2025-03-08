@@ -59,7 +59,7 @@ class CreatePaymentIntentView(APIView):
                     )
                     
                     # Generate QR codes for free tickets
-                    self._generate_qr_codes(ticket)
+                    _generate_qr_codes(ticket)
                     
                     # # Update event ticket count
                     # event.tickets_sold += quantity
@@ -108,7 +108,7 @@ class CreatePaymentIntentView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
     
-    def _generate_qr_codes(self, ticket):
+def _generate_qr_codes(self, ticket):
         """Generate QR codes for a ticket and save the image."""
         unique_string = f"{ticket.id}:{ticket.ticket_code}:{ticket.event.id}:{ticket.user.id}:{secrets.token_hex(8)}"
         qr_code_data = hashlib.sha256(unique_string.encode()).hexdigest()
@@ -138,9 +138,6 @@ class PaymentConfirmationView(APIView):
             "ticket_code": 4sdfafr3453453
         }
         """
-        intent = stripe.PaymentIntent.retrieve("pi_3QyysF05C8Ogcw430EFSsVLM")
-        print(intent)
-
         try:
             payment_intent_id = request.data.get('payment_intent_id')
             ticket_code = request.data.get('ticket_code')
@@ -148,7 +145,7 @@ class PaymentConfirmationView(APIView):
             # Validate the ticket exists and belongs to this user
             try:
                 ticket = Ticket.objects.get(ticket_code=ticket_code, user=request.user)
-                print("ticket is ", ticket)
+                
             except Ticket.DoesNotExist:
                 return Response(
                     {'error': 'Ticket not found or does not belong to this user.'},
@@ -164,7 +161,6 @@ class PaymentConfirmationView(APIView):
             
             # Verify payment with Stripe
             payment_status = StripeService.confirm_payment(payment_intent_id)
-            print(f"Payment status from Stripe: {payment_status}")
             
             if not payment_status.get('success'):
                 return Response(
@@ -178,6 +174,9 @@ class PaymentConfirmationView(APIView):
                 ticket.status = 'PAID'
                 ticket.save()
                 
+                
+                _generate_qr_codes(ticket)
+                
                 # Create payment record
                 Payment.objects.create(
                     user = request.user,
@@ -186,26 +185,13 @@ class PaymentConfirmationView(APIView):
                     transaction_id=payment_intent_id,
                     status='COMPLETED'
                 )
-
-                # Create a unique, secure identifier for this specific ticket
-                unique_string = f"{ticket.id}:{ticket.ticket_code}:{request.user.id}:{secrets.token_hex(8)}"
-                # Use a secure hash to create the QR code data
-                qr_code_data = hashlib.sha256(unique_string.encode()).hexdigest()
-                
-                # Create the QR code record
-                qr = TicketQR.objects.create(
-                    ticket=ticket,
-                    qr_code_data=qr_code_data,
-                    is_checked_in=False
-                )
-                
+                   
                 return Response({
                     'success': True,
                     'ticket_id': ticket.id,
                     'purchase_date': timezone.now(),
                     'quantity': ticket.quantity,
                     'total_price': float(ticket.total_price),
-                    
                 })
                 
         except Exception as e:

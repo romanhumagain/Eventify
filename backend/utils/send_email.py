@@ -1,6 +1,7 @@
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
-
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 
 # for sending event approval mail
 def send_event_approval_mail(event_title, organizer):
@@ -30,15 +31,15 @@ def send_event_approval_mail(event_title, organizer):
 
 
 # for sending welcome message to user
-def send_welcome_email(email, first_name):
+def send_welcome_email(email, username):
     subject = "Welcome to Eventify! 🎉"
     from_email = settings.EMAIL_HOST_USER
     recipient_list = [email]
 
-    text_content = f"Dear {first_name},\n\nWelcome to Eventify! We are excited to have you on board. You can now start exploring and creating amazing events.\n\nBest Regards,\nEventify Team"
+    text_content = f"Dear {username},\n\nWelcome to Eventify! We are excited to have you on board. You can now start exploring and creating amazing events.\n\nBest Regards,\nEventify Team"
 
     html_content = f"""
-    <p>Dear {first_name},</p>
+    <p>Dear {username},</p>
     <p>Welcome to Eventify! 🎉</p>
     <p>We are excited to have you on board. You can now start exploring and creating amazing events.</p>
     <p>Best Regards,<br>Eventify Team</p>
@@ -120,3 +121,34 @@ def send_event_reminder_mail(email, first_name, event, rsvp_status):
         msg.send()
     except Exception as e:
         print(f"Error: Failed to send event reminder email to {email}. Reason: {e}")
+
+
+#  to send mail after successful checkedin
+def send_checked_in_email(ticket_qr):
+    """ Sends a confirmation email after successful ticket check-in with error handling. """
+    try:
+        user = ticket_qr.ticket.user
+        event = ticket_qr.ticket.event
+
+        subject = f"Check-in Confirmation: {event.title}"
+        
+        # Message content in HTML format
+        message = f"""
+        <p>We’re excited to confirm that your check-in for the event <strong>{event.title}</strong> was successful! 🎉</p>
+        <p><strong>🕒 Check-in Time:</strong> {ticket_qr.checked_in_time.strftime("%Y-%m-%d %H:%M:%S")}</p>
+        <p>Enjoy the event and have a great time! 🚀</p>
+        """
+
+        # Create email message object
+        email = EmailMessage(
+            subject=subject,
+            body=message,
+            from_email=settings.EMAIL_HOST_USER,
+            to=[user.email],
+        )
+        email.content_subtype = "html" 
+
+        email.send()
+
+    except Exception as e:
+        print(f"❌ Failed to send check-in email to {user.email}: {str(e)}")

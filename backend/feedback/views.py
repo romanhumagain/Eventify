@@ -7,14 +7,22 @@ from authentication.models import User
 from rest_framework.response import Response
 from rest_framework import status
 
+
+# to list all the feedbacks for specific event and post feedback for specific event
 class FeedbackListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+
     def get_queryset(self):
+        
         # Get the event ID from URL parameter
         event_id = self.kwargs['event_id']
         event = Event.objects.get(id=event_id, is_approved = True)
+        
+        user = self.request.user
+        if user != event.organizer:
+            raise PermissionDenied('You do not have permission to view feedbacks for this event.')
         
         # Return all feedbacks for this event
         return Feedback.objects.filter(event=event).order_by('-created_at')
@@ -31,6 +39,7 @@ class FeedbackListCreateAPIView(generics.ListCreateAPIView):
         serializer.save(user=self.request.user, event=event)
         
 
+# to retrive, update ande delete feedback with feedback id
 class FeedbackRetrieveUpdateDestroyAPIView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]

@@ -19,6 +19,5 @@ class EventAdmin(admin.ModelAdmin):
     #     super().save_model(request, obj, form, change)
 
 admin.site.register(Event, EventAdmin)
-
 admin.site.register(EventCategory)
 admin.site.register(SavedEvent)

@@ -1,12 +1,14 @@
 # user authentication API Documentation
 
+## Base URL
+`http://127.0.0.1:8000`
 
 ## Endpoints Overview
 
 | Endpoint            | Method | Description |
 |--------------------|--------|-------------|
 | `/api/user/register/` | POST | Register a new user or organizer |
-| `/api/user/login/` | POST | Login a user and obtain userentication tokens |
+| `/api/user/login/` | POST | Login a user and obtain user authentication tokens |
 | `/api/user/profile/` | GET | Retrieve the userenticated user's profile |
 | `/api/user/profile/` | PATCH | Update the userenticated user's profile |
 | `/api/user/profile/` | DELETE | Deactivate the userenticated user's account |
@@ -37,6 +39,8 @@
 }
 ```
 
+
+
 ### Response
 ```json
 {
@@ -46,6 +50,20 @@
   "is_organizer": false
 }
 ```
+
+### Error Responses
+If a user tries to register with an already existing username or email, the server will respond with a 400 Bad Request status code, along with the following error message:
+```json
+{
+  "username": [
+    "user with this username already exists."
+  ],
+  "email": [
+    "user with this email already exists."
+  ]
+}
+```
+
 
 ---
 
@@ -78,6 +96,21 @@
   "is_organizer": false
 }
 ```
+### Error Responses for login
+1. If the provided email does not exist in the system, the server will respond with a 400 Bad Request status code and the following error message:
+```json
+{
+  "detail": "User with this email does not exist."
+}
+```
+
+2. If the credentials provided (email/password) are invalid, the server will respond with a 400 Bad Request status code and the following error message:
+```json
+{
+  "detail": "Invalid credentials."
+}
+```
+
 
 ---
 
@@ -89,7 +122,7 @@
 ### Headers
 | Key           | Value |
 |--------------|-------|
-| userorization | Bearer `<access_token>` |
+| Authorization | Bearer `<access_token>` |
 
 ### Response
 ```json
@@ -98,7 +131,7 @@
   "last_name": "Doe",
   "username": "john_doe",
   "email": "johndoe@example.com",
-  "profile_picture": "<profile_picture_url>",
+  "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/image.jpg",
   "phone_number": "1234567890",
   "address": "123 Main St",
   "is_organizer": false
@@ -115,7 +148,7 @@
 ### Headers
 | Key           | Value |
 |--------------|-------|
-| userorization | Bearer `<access_token>` |
+| Authorization | Bearer `<access_token>` |
 
 ### Request Body (Partial Updates Allowed)
 
@@ -143,7 +176,7 @@
   "last_name": "Doe",
   "username": "john_doe",
   "email": "johndoe@example.com",
-  "profile_picture": "<profile_picture_url>",
+  "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/image.jpg",
   "phone_number": "9876543210",
   "address": "123 Main St",
   "is_organizer": false
@@ -160,7 +193,7 @@
 ### Headers
 | Key           | Value |
 |--------------|-------|
-| userorization | Bearer `<access_token>` |
+| Authorization | Bearer `<access_token>` |
 
 ### Response
 ```json
@@ -173,8 +206,8 @@
 
 ---
 
-## userentication Notes
-- Tokens (access & refresh) must be included in the `userorization` header for protected routes.
+## user authentication Notes
+- Tokens (access & refresh) must be included in the `Authorization` header for protected routes.
 - Profile updates allow partial updates (i.e., sending only the fields that need to be modified).
 - Deleting a user account does not permanently remove it but marks it as inactive.
 

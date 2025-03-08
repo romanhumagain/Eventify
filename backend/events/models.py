@@ -6,9 +6,8 @@ from django.db.models import Sum
 
 
 class EventCategory(models.Model):
-    name = models.CharField(max_length=200)
-    description = models.TextField(null=True, blank=True)
-
+    name = models.CharField(max_length=100)
+    
     class Meta:
         verbose_name = "Event Category"
         verbose_name_plural = "Event Categories"
@@ -18,21 +17,20 @@ class EventCategory(models.Model):
       
 class Event(models.Model):
     EVENT_TYPE_CHOICES = [
-        ("online", "Online"),
         ("physical", "Physical"),
+        ("remote", "Remote"),
     ]
 
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name="events")
     category = models.ForeignKey(EventCategory, on_delete=models.SET_NULL, null=True, blank=True, related_name="events")
 
-    banner = models.ImageField(upload_to="events/", null=True, blank=True)
+    banner = models.ImageField(upload_to="events-banner/")
     title = models.CharField(max_length=100)
-    subtitle = models.CharField(max_length=100, blank=True, null=True)
-    description = models.TextField()
+    subtitle = models.CharField(max_length=100)
+    details = models.TextField(null=True, blank=True)
 
     event_type = models.CharField(max_length=20, choices=EVENT_TYPE_CHOICES)
-    location = models.CharField(max_length=255, blank=True, null=True)
-    online_link = models.URLField(blank=True, null=True)
+    venue = models.CharField(max_length=255, blank=True, null=True)
 
     start_date = models.DateTimeField()
     end_date = models.DateTimeField()
@@ -40,7 +38,7 @@ class Event(models.Model):
 
     total_tickets = models.PositiveIntegerField()
     is_free = models.BooleanField(default=False)
-    price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    ticket_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     is_approved = models.BooleanField(default=False)
 
@@ -50,17 +48,10 @@ class Event(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["organizer", "title", "start_date"],
+                fields=["organizer", "title", "start_date", "event_type" ],
                 name="unique_event_per_organizer",
             )
         ]
-
-    def clean(self):
-        if self.start_date >= self.end_date:
-            raise ValidationError("End date must be after the start date.")
-
-        if self.booking_deadline and self.booking_deadline >= self.start_date:
-            raise ValidationError("Booking deadline must be before the event start date.")
           
     def save(self, *args, **kwargs):
         if self.pk:
@@ -68,6 +59,12 @@ class Event(models.Model):
             self._original_is_approved = original.is_approved
         else:
             self._original_is_approved = self.is_approved
+            
+        self.is_free = not self.ticket_price or self.ticket_price == 0
+
+        if not self.booking_deadline:
+            self.booking_deadline = self.end_date
+            
         super(Event, self).save(*args, **kwargs)
 
     @property
@@ -84,7 +81,9 @@ class Event(models.Model):
         return available_tickets
 
     def __str__(self):
-        return f"{self.title} organized by {self.organizer.first_name} {self.organizer.last_name}"
+        return f"{self.title} organized by {self.organizer.username}"
+
+
 
 
 class SavedEvent(models.Model):

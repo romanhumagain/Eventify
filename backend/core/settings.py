@@ -31,6 +31,19 @@ STRIPE_PUBLIC_KEY=env("STRIPE_PUBLIC_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
 
+# # setup for Celery
+# CELERY_BROKER_URL = "redis://localhost:6379/0"  # Redis as the message broker
+# CELERY_ACCEPT_CONTENT = ["json"]
+# CELERY_TASK_SERIALIZER = "json"
+
+
+# Celery Configuration
+CELERY_BROKER_URL = 'django-db'  # Use Django database as the broker
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -57,7 +70,10 @@ EXTERNAL_APPS = [
     "corsheaders",
     "rest_framework_simplejwt",
     'rest_framework_simplejwt.token_blacklist',
-    'stripe'
+    'stripe',
+    
+    'django_celery_results',
+    'django_celery_beat', 
 ]
 
 INSTALLED_APPS += EXTERNAL_APPS
@@ -217,3 +233,10 @@ EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
+
+
+
+CELERY_BROKER_URL = 'memory://'  # Use the Django database as the broker (no actual broker needed)
+CELERY_RESULT_BACKEND = 'django-db'
+
+ 

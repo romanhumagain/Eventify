@@ -1,24 +1,33 @@
 from django.contrib import admin
 from .models import Ticket, TicketQR
+from django.utils.html import format_html
 
 class TicketAdmin(admin.ModelAdmin):
-    # Define the fields to display in the list view
     list_display = ('ticket_code', 'event', 'user', 'quantity', 'total_price', 'status', 'purchase_date')
-    
-    # Add filters to the sidebar to filter tickets by status and event
     list_filter = ('status', 'event')
-    
-    # Add search functionality for ticket code, event, and user
     search_fields = ('ticket_code', 'event__title', 'user__first_name', 'user__last_name')
-    
-    # Add ordering to sort tickets by purchase date (most recent first)
     ordering = ('-purchase_date',)
-    
-    # Make some fields read-only (for example, ticket_code and purchase_date)
     readonly_fields = ('ticket_code', 'purchase_date')
 
 # Register the customized admin for Ticket model
 admin.site.register(Ticket, TicketAdmin)
 
-# Register the default admin for TicketQR model
-admin.site.register(TicketQR)
+@admin.register(TicketQR)
+class TicketQRAdmin(admin.ModelAdmin):
+    list_display = ('ticket', 'user', 'event', 'is_checked_in', 'checked_in_time', 'qr_code_preview')
+    list_filter = ('is_checked_in', 'ticket__event')
+    search_fields = ('ticket__ticket_code', 'ticket__user__username', 'ticket__event__title')
+    # readonly_fields = ('ticket', 'qr_code_data', 'qr_code_image', 'is_checked_in', 'checked_in_time', 'qr_code_preview')
+
+    def user(self, obj):
+        return obj.ticket.user.username
+
+    def event(self, obj):
+        return obj.ticket.event.title
+
+    def qr_code_preview(self, obj):
+        if obj.qr_code_image:
+            return format_html('<img src="{}" width="80" height="80" style="border-radius:10px;"/>', obj.qr_code_image.url)
+        return "No QR Code"
+
+    qr_code_preview.short_description = "QR Code Preview"

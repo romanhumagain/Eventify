@@ -4,6 +4,7 @@ from .models import Event
 from utils.send_email import send_event_approval_mail
 from notification.models import Notification
 
+
 @receiver(post_save, sender=Event)
 def event_approved(sender, instance, created, **kwargs):
     if not created:  # Only trigger if the event is being updated, not created
@@ -13,6 +14,7 @@ def event_approved(sender, instance, created, **kwargs):
                 # Send notification to Organizer for event approval
                 notification = Notification.objects.create(
                     user=instance.organizer,
+                    event = instance,
                     message=f"Your event {instance.title} has been approved."
                 )
                 notification.save()

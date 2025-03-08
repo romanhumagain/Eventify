@@ -13,32 +13,111 @@ class EventCategorySerializer(serializers.ModelSerializer):
 class OrganizerSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
-    fields = ['first_name', 'last_name', 'profile_picture','username' ]
+    fields = ['id', 'profile_picture', 'username' ]
   
         
 class EventSerializer(serializers.ModelSerializer):
-    category_name = serializers.SerializerMethodField(read_only=True)
     organizer = OrganizerSerializer(read_only=True)
+    category_details = EventCategorySerializer(read_only = True, source = 'category')
 
     is_upcoming = serializers.SerializerMethodField(read_only=True)
     is_active = serializers.SerializerMethodField(read_only=True)
     is_expired = serializers.SerializerMethodField(read_only=True)
-
-    tickets_sold = serializers.IntegerField(read_only=True)
     tickets_available = serializers.IntegerField( read_only=True)
-
+    
+    attendees = serializers.SerializerMethodField(read_only = True)
+    is_saved = serializers.SerializerMethodField(read_only = True)
+    
     class Meta:
         model = Event
         fields = [
-            'id', 'banner', 'title', 'subtitle', 'description', 'event_type', 'is_free', 'price',
-            'start_date', 'end_date', 'booking_deadline', 'location', 'online_link', 
-            'category', 'category_name', 'total_tickets', 'tickets_sold', 'tickets_available',
-            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired',
+            'id', 'banner', 'title', 'subtitle', 'details', 'event_type', 'is_free', 'ticket_price',
+            'start_date', 'end_date', 'booking_deadline', 'venue', 
+            'category','category_details', 'total_tickets', 'tickets_available',
+            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired','attendees','is_saved'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'category_name', 'tickets_sold', 'tickets_available']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'tickets_available', 'category_details']
+        extra_kwargs = {
+            'category': {'write_only': True}  
+        }
+        
+    # custom function to validate fields
+    def validate_fields(self, validated_data):
+        errors = {}
 
-    def get_category_name(self, obj):
-        return obj.category.name if obj.category else None
+        if 'category' not in validated_data:
+            errors["detail"] = "Event category is required."
+            
+        elif validated_data["start_date"] >= validated_data["end_date"]:
+            errors["detail"] = "End date must be after the start date."
+
+        elif validated_data.get("booking_deadline") and validated_data["booking_deadline"] >= validated_data["end_date"]:
+            errors["detail"] = "Booking deadline must be before the event end date."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+    def create(self, validated_data):
+        self.validate_fields(validated_data)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        errors = {}
+        
+        if validated_data["start_date"] >= validated_data["end_date"]:
+            errors["detail"] = "End date must be after the start date."
+
+        elif validated_data.get("booking_deadline") and validated_data["booking_deadline"] >= validated_data["end_date"]:
+            errors["detail"] = "Booking deadline must be before the event end date."
+
+        if errors:
+            raise serializers.ValidationError(errors)
+        return super().update(instance, validated_data)
+    
+    def get_is_upcoming(self, obj):
+        now = timezone.now()
+        start_date = timezone.make_aware(obj.start_date) if obj.start_date.tzinfo is None else obj.start_date
+        return start_date > now
+
+    def get_is_active(self, obj):
+        now = timezone.now() 
+        start_date = timezone.make_aware(obj.start_date) if obj.start_date.tzinfo is None else obj.start_date
+        end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
+        return start_date <= now <= end_date
+
+    def get_is_expired(self, obj):
+        now = timezone.now() 
+        end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
+        return end_date < now
+    
+    def get_is_saved(self, obj):
+        request = self.context.get('request', None)  # Get request safely
+        if request and request.user and request.user.is_authenticated:
+            return SavedEvent.objects.filter(event=obj, user=request.user).exists()
+        return False
+    
+    def get_attendees(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user == obj.organizer:
+            return [{"test_attendee": "test_attendee_detail"}]  
+        return []
+
+
+class EventDetailsForSavedEventSerializer(serializers.ModelSerializer):
+    organizer = OrganizerSerializer(read_only=True)
+    category_details = EventCategorySerializer(read_only = True, source = 'category')
+
+    is_upcoming = serializers.SerializerMethodField(read_only=True)
+    is_active = serializers.SerializerMethodField(read_only=True)
+    is_expired = serializers.SerializerMethodField(read_only=True)
+    
+    class Meta:
+        model = Event
+        fields = [
+            'id', 'banner', 'title', 'subtitle', 'details', 'event_type', 'is_free', 'ticket_price',
+            'start_date', 'end_date', 'booking_deadline', 'venue', 
+            'category_details', 'organizer', 'is_upcoming', 'is_active', 'is_expired'
+        ]
 
     def get_is_upcoming(self, obj):
         now = timezone.now()
@@ -55,93 +134,16 @@ class EventSerializer(serializers.ModelSerializer):
         now = timezone.now() 
         end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
         return end_date < now
-      
-      
+
+    
 class SavedEventSerializer(serializers.ModelSerializer):
-    event_details = EventSerializer(source = 'event', read_only=True)
+    event_details = EventDetailsForSavedEventSerializer(source = 'event', read_only=True)
     class Meta:
         model = SavedEvent
         fields = ['id', 'event', 'saved_at', 'event_details']
         read_only_fields = ['id', 'saved_at']
+        extra_kwargs = {
+            'event':{'write_only':True}
+        }
         
-        
-
-
-# to handle the data while showing own posted events
-class OwnEventSerializer(serializers.ModelSerializer):
-    category_name = serializers.SerializerMethodField(read_only=True)
-    organizer = OrganizerSerializer(read_only=True)
     
-    is_upcoming = serializers.SerializerMethodField(read_only=True)
-    is_active = serializers.SerializerMethodField(read_only=True)
-    is_expired = serializers.SerializerMethodField(read_only=True)
-    
-    tickets_sold = serializers.IntegerField(read_only=True)
-    tickets_available = serializers.IntegerField(read_only=True)
-    
-    # Add attendees field
-    attendees = serializers.SerializerMethodField(read_only=True)
-    checked_in_count = serializers.SerializerMethodField(read_only=True)
-    
-    class Meta:
-        model = Event
-        fields = [
-            'id', 'banner', 'title', 'subtitle', 'description', 'event_type', 'is_free', 'price',
-            'start_date', 'end_date', 'booking_deadline', 'location', 'online_link', 
-            'category', 'category_name', 'total_tickets', 'tickets_sold', 'tickets_available',
-            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired',
-            'attendees', 'checked_in_count'  # Add new fields
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'category_name', 
-                           'tickets_sold', 'tickets_available', 'attendees', 'checked_in_count']
-    
-    def get_category_name(self, obj):
-        return obj.category.name if obj.category else None
-    
-    def get_is_upcoming(self, obj):
-        now = timezone.now()
-        start_date = timezone.make_aware(obj.start_date) if obj.start_date.tzinfo is None else obj.start_date
-        return start_date > now
-    
-    def get_is_active(self, obj):
-        now = timezone.now()
-        
-        start_date = timezone.make_aware(obj.start_date) if obj.start_date.tzinfo is None else obj.start_date
-        end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
-        return start_date <= now <= end_date
-    
-    def get_is_expired(self, obj):
-        now = timezone.now()
-        
-        end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
-        return end_date < now
-    
-    def get_attendees(self, obj):
-        # Only return attendees data if the requester is the organizer
-        request = self.context.get('request')
-        if request and request.user == obj.organizer:
-            # Get all ticket QRs for this event
-            ticket_qrs = TicketQR.objects.filter(ticket__event=obj)
-            
-            attendees_data = []
-            for qr in ticket_qrs:
-                # Get user info from the ticket
-                user = qr.ticket.user
-                attendees_data.append({
-                    'attendee_id': user.id,
-                    'name': f"{user.first_name} {user.last_name}",
-                    'email': user.email,
-                    'profile_picture':user.profile_picture or None,
-                    'ticket_id':qr.ticket.id,
-                    'ticket_code': qr.ticket.ticket_code,
-                    'is_checked_in': qr.is_checked_in,
-                    'checked_in_time': qr.checked_in_time
-                })
-            return attendees_data
-        return [{'detail':'You are not a organizer of this event to view this data !'}] 
-    
-    def get_checked_in_count(self, obj):
-        request = self.context.get('request')
-        if request and request.user == obj.organizer:
-            return TicketQR.objects.filter(ticket__event=obj, is_checked_in=True).count()
-        return 0
