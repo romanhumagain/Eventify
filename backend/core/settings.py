@@ -14,6 +14,7 @@ from pathlib import Path
 import environ
 import os
 from datetime import timedelta
+import stripe
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,21 +29,14 @@ SECRET_KEY = env("SECRET_KEY")
 STRIPE_SECRET_KEY = env("STRIPE_SECRET_KEY")
 STRIPE_PUBLIC_KEY=env("STRIPE_PUBLIC_KEY")
 
+# Configure Stripe API key
+stripe.api_key = STRIPE_SECRET_KEY
+
+# for local development using vite (frontend)
+VITE_BASE_URL = env('VITE_URL')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=True)
-
-# # setup for Celery
-# CELERY_BROKER_URL = "redis://localhost:6379/0"  # Redis as the message broker
-# CELERY_ACCEPT_CONTENT = ["json"]
-# CELERY_TASK_SERIALIZER = "json"
-
-
-# Celery Configuration
-CELERY_BROKER_URL = 'django-db'  # Use Django database as the broker
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-
-
 
 # Application definition
 
@@ -72,8 +66,8 @@ EXTERNAL_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'stripe',
     
-    'django_celery_results',
-    'django_celery_beat', 
+    # 'django_celery_results',
+    # 'django_celery_beat', 
 ]
 
 INSTALLED_APPS += EXTERNAL_APPS
@@ -233,10 +227,5 @@ EMAIL_PORT = env("EMAIL_PORT")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
-
-
-
-CELERY_BROKER_URL = 'memory://'  # Use the Django database as the broker (no actual broker needed)
-CELERY_RESULT_BACKEND = 'django-db'
 
  

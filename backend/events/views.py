@@ -12,6 +12,7 @@ from .serializers import (
     EventSerializer,
     EventCategorySerializer,
     SavedEventSerializer,
+    EventDetailsSerializer
 )
 from rest_framework import generics
 from datetime import timedelta
@@ -25,6 +26,7 @@ from django.db import IntegrityError
 from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Max, F
 
 
 # to handle the event category
@@ -200,7 +202,7 @@ class MyEventListAPIView(generics.ListAPIView):
 # to retrieve spicific event, update and delete an event
 class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Event.objects.all()
-    serializer_class = EventSerializer
+    serializer_class = EventDetailsSerializer
     permission_classes = [IsOwnerOrReadOnly]
     lookup_field = "id"
 
@@ -236,6 +238,7 @@ class SavedEventToggleAPIView(APIView):
                 {"detail": "Event unsaved successfully."}, status=status.HTTP_200_OK
             )
 
+# to get list of saved events
 class SavedEventListAPIView(generics.ListAPIView):
     serializer_class = SavedEventSerializer
     permission_classes = [IsAuthenticated]
@@ -244,3 +247,20 @@ class SavedEventListAPIView(generics.ListAPIView):
         return SavedEvent.objects.filter(
             user=self.request.user, event__is_approved=True
         ).order_by("-saved_at")
+
+
+# to get all my booking 
+class MyBookingAPIView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request, *args, **kwargs):
+
+        events_with_latest_booking = Event.objects.filter(
+            tickets__user=request.user
+        ).annotate(
+            latest_booking_date=Max('tickets__purchase_date')
+        ).order_by('-latest_booking_date').distinct()
+        
+        # Serialize the events
+        serializer = EventSerializer(events_with_latest_booking, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

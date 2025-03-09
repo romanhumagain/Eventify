@@ -13,7 +13,6 @@ class FeedbackListCreateAPIView(generics.ListCreateAPIView):
     serializer_class = FeedbackSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-
     def get_queryset(self):
         
         # Get the event ID from URL parameter

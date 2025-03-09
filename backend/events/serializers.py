@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import Event, EventCategory, SavedEvent
 from authentication.models import User
 from django.utils import timezone
-from tickets.models import TicketQR
+from tickets.models import BookedTicket
+from feedback.models import Feedback
 
 
 class EventCategorySerializer(serializers.ModelSerializer):
@@ -10,14 +11,14 @@ class EventCategorySerializer(serializers.ModelSerializer):
         model = EventCategory
         fields = "__all__"
         
-class OrganizerSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
   class Meta:
     model = User
     fields = ['id', 'profile_picture', 'username' ]
   
         
 class EventSerializer(serializers.ModelSerializer):
-    organizer = OrganizerSerializer(read_only=True)
+    organizer = UserSerializer(read_only=True)
     category_details = EventCategorySerializer(read_only = True, source = 'category')
 
     is_upcoming = serializers.SerializerMethodField(read_only=True)
@@ -99,26 +100,64 @@ class EventSerializer(serializers.ModelSerializer):
     def get_attendees(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated and request.user == obj.organizer:
-            return [{"test_attendee": "test_attendee_detail"}]  
+            # Filter for paid tickets only
+            booked_tickets = BookedTicket.objects.filter(
+                ticket__event=obj,
+                ticket__status='paid'  # Only include paid tickets
+            ).select_related('ticket__user')
+
+            # Use a set to track unique users we've already processed
+            seen_users = set()
+            attendees = []
+            
+            for booked_ticket in booked_tickets:
+                user_id = booked_ticket.ticket.user.id
+                # Only add each user once
+                if user_id not in seen_users:
+                    seen_users.add(user_id)
+                    attendees.append({
+                        'user': user_id,
+                        'username': booked_ticket.ticket.user.username,
+                        'is_checked_in': booked_ticket.is_checked_in
+                    })
+            
+            return attendees
+
         return []
 
-
-class EventDetailsForSavedEventSerializer(serializers.ModelSerializer):
-    organizer = OrganizerSerializer(read_only=True)
+# Serializer for the event feedback serializer
+class FeedbackSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only = True)
+    class Meta:
+        model = Feedback
+        fields = ['id', 'message', 'created_at', 'user']
+        read_only_fields = ['id', 'user']
+    
+    
+class EventDetailsSerializer(serializers.ModelSerializer):
+    organizer = UserSerializer(read_only=True)
     category_details = EventCategorySerializer(read_only = True, source = 'category')
-
     is_upcoming = serializers.SerializerMethodField(read_only=True)
     is_active = serializers.SerializerMethodField(read_only=True)
     is_expired = serializers.SerializerMethodField(read_only=True)
-    
+    tickets_available = serializers.IntegerField( read_only=True)
+    attendees = serializers.SerializerMethodField(read_only = True)
+    feedbacks = serializers.SerializerMethodField(read_only = True)
+    is_saved = serializers.SerializerMethodField(read_only = True)
+
     class Meta:
         model = Event
         fields = [
             'id', 'banner', 'title', 'subtitle', 'details', 'event_type', 'is_free', 'ticket_price',
             'start_date', 'end_date', 'booking_deadline', 'venue', 
-            'category_details', 'organizer', 'is_upcoming', 'is_active', 'is_expired'
+            'category_details', 'total_tickets', 'tickets_available',
+            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired','attendees','is_saved', 'feedbacks'
         ]
-
+        read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'tickets_available', 'category_details']
+        extra_kwargs = {
+            'category': {'write_only': True}  
+        }
+        
     def get_is_upcoming(self, obj):
         now = timezone.now()
         start_date = timezone.make_aware(obj.start_date) if obj.start_date.tzinfo is None else obj.start_date
@@ -134,10 +173,53 @@ class EventDetailsForSavedEventSerializer(serializers.ModelSerializer):
         now = timezone.now() 
         end_date = timezone.make_aware(obj.end_date) if obj.end_date.tzinfo is None else obj.end_date
         return end_date < now
+    
+    def get_is_saved(self, obj):
+        request = self.context.get('request', None)  # Get request safely
+        if request and request.user and request.user.is_authenticated:
+            return SavedEvent.objects.filter(event=obj, user=request.user).exists()
+        return False
+    
+    def get_attendees(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user == obj.organizer:
+            # Filter for paid tickets only
+            booked_tickets = BookedTicket.objects.filter(
+                ticket__event=obj,
+                ticket__status='paid'  # Only include paid tickets
+            ).select_related('ticket__user')
+
+            # Use a set to track unique users we've already processed
+            seen_users = set()
+            attendees = []
+            
+            for booked_ticket in booked_tickets:
+                user_id = booked_ticket.ticket.user.id
+                # Only add each user once
+                if user_id not in seen_users:
+                    seen_users.add(user_id)
+                    attendees.append({
+                        'user': user_id,
+                        'username': booked_ticket.ticket.user.username,
+                        'is_checked_in': booked_ticket.is_checked_in
+                    })
+            
+            return attendees
+
+        return []
+
+    
+    def get_feedbacks(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated and request.user == obj.organizer:
+            feedbacks = obj.feedbacks.all()  
+            return FeedbackSerializer(feedbacks, many=True).data 
+        return []
+        
 
     
 class SavedEventSerializer(serializers.ModelSerializer):
-    event_details = EventDetailsForSavedEventSerializer(source = 'event', read_only=True)
+    event_details = EventSerializer(source = 'event', read_only=True)
     class Meta:
         model = SavedEvent
         fields = ['id', 'event', 'saved_at', 'event_details']

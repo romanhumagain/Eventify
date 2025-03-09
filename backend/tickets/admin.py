@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Ticket, TicketQR
+from .models import Ticket, BookedTicket
 from django.utils.html import format_html
 
 class TicketAdmin(admin.ModelAdmin):
@@ -12,8 +12,8 @@ class TicketAdmin(admin.ModelAdmin):
 # Register the customized admin for Ticket model
 admin.site.register(Ticket, TicketAdmin)
 
-@admin.register(TicketQR)
-class TicketQRAdmin(admin.ModelAdmin):
+@admin.register(BookedTicket)
+class BookedTicketAdmin(admin.ModelAdmin):
     list_display = ('ticket', 'user', 'event', 'is_checked_in', 'checked_in_time', 'qr_code_preview')
     list_filter = ('is_checked_in', 'ticket__event')
     search_fields = ('ticket__ticket_code', 'ticket__user__username', 'ticket__event__title')

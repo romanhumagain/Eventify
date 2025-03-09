@@ -70,7 +70,7 @@ class Event(models.Model):
     @property
     def tickets_sold(self):
         # Sum the quantity of "Paid" tickets
-        sold_tickets = self.tickets.filter(status='Paid').aggregate(total_sold=Sum('quantity'))['total_sold'] or 0
+        sold_tickets = self.tickets.filter(status='paid').aggregate(total_sold=Sum('quantity'))['total_sold'] or 0
         return sold_tickets
 
     @property
