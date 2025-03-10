@@ -1,17 +1,17 @@
 # user authentication API Documentation
 
 ## Base URL
-`http://127.0.0.1:8000`
+`http://127.0.0.1:8000/api/` (Common endpoint for all url)
 
 ## Endpoints Overview
 
 | Endpoint            | Method | Description |
 |--------------------|--------|-------------|
-| `/api/user/register/` | POST | Register a new user or organizer |
-| `/api/user/login/` | POST | Login a user and obtain user authentication tokens |
-| `/api/user/profile/` | GET | Retrieve the userenticated user's profile |
-| `/api/user/profile/` | PATCH | Update the userenticated user's profile |
-| `/api/user/profile/` | DELETE | Deactivate the userenticated user's account |
+| `user/register/`| POST | Register a new user or organizer |
+| `user/login/`   | POST | Login a user and obtain user authentication tokens |
+| `user/profile/` | GET | Retrieve the userenticated user's profile |
+| `user/profile/` | PATCH | Update the userenticated user's profile |
+| `user/profile/` | DELETE | Deactivate the userenticated user's account |
 
 ---
 

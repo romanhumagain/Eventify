@@ -18,7 +18,7 @@ The request body should contain the following data:
 
 
 Response
-200 OK (Success)
+OK (Success)
 
 {
   "detail": "Ticket successfully checked in",
@@ -34,44 +34,44 @@ Response
 }
 
 
-400 Bad Request (Invalid QR Code)
+Bad Request (Invalid QR Code)
 {
   "detail": "Invalid QR code"
 }
 
 
-400 Bad Request (QR Code Data Missing)
+Bad Request (QR Code Data Missing)
 {
   "detail": "QR code data is required"
 }
 
 
-400 Bad Request (Event Date Passed)
+Bad Request (Event Date Passed)
 {
   "detail": "This event has already passed"
 }
 
 
-400 Bad Request (Ticket Already Checked In)
+Bad Request (Ticket Already Checked In)
 {
   "detail": "Ticket already checked in",
   "checked_in_time": "<CHECK_IN_TIME>"
 }
 
 
-400 Bad Request (Ticket Status Invalid for Check-In)
+Bad Request (Ticket Status Invalid for Check-In)
 {
   "detail": "Ticket status is <TICKET_STATUS>, which is not valid for check-in",
   "valid_statuses": ["paid"]
 }
 
-403 Forbidden (User is not Organizer of the Event)
+Forbidden (User is not Organizer of the Event)
 {
   "detail": "You do not have permission for ticket verification"
 }
 
 
-403 Forbidden (Organizer does not match the Event's Organizer)
+Forbidden (Organizer does not match the Event's Organizer)
 {
   "detail": "You do not have permission to verify this ticket."
 }

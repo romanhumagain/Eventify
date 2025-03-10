@@ -10,19 +10,6 @@ All endpoints are prefixed with: `/api/events/`
 
 ## Table of Contents
 
-- [API Endpoints Overview](#api-endpoints-overview)
-- [Event Categories](#event-categories)
-  - [List All Categories](#list-all-categories)
-- [Events](#events)
-  - [List All Events](#list-all-events)
-- [My Events](#my-events)
-  - [List My Events](#list-my-events)
-- [Saved Events](#saved-events)
-  - [List Saved Events](#list-saved-events)
-  - [Toggle Save Event](#toggle-save-event)
-- [My Bookings](#my-bookings)
-  - [List My Bookings](#list-my-bookings)
-
 - [Important Notes for Frontend Integration](#important-notes-for-frontend-integration)
 
 ## API Endpoints Overview
@@ -80,6 +67,7 @@ Retrieves a list of all approved events with filtering options.
 - **Authentication Required**: No
 
 #### Query Parameters
+- GET /api/events/?search=conference&category=Workshop&date=today&event_type=remote&is_free=true&venue=Kathmandu&status=upcoming
 
 | Parameter  | Description                                          | Example Value            |
 |------------|------------------------------------------------------|--------------------------|
