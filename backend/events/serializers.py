@@ -144,6 +144,8 @@ class EventDetailsSerializer(serializers.ModelSerializer):
     attendees = serializers.SerializerMethodField(read_only = True)
     feedbacks = serializers.SerializerMethodField(read_only = True)
     is_saved = serializers.SerializerMethodField(read_only = True)
+    
+    bookings = serializers.SerializerMethodField(read_only = True)
 
     class Meta:
         model = Event
@@ -151,7 +153,7 @@ class EventDetailsSerializer(serializers.ModelSerializer):
             'id', 'banner', 'title', 'subtitle', 'details', 'event_type', 'is_free', 'ticket_price',
             'start_date', 'end_date', 'booking_deadline', 'venue', 
             'category_details', 'total_tickets', 'tickets_available',
-            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired','attendees','is_saved', 'feedbacks'
+            'created_at', 'updated_at', 'organizer', 'is_upcoming', 'is_active', 'is_expired','attendees','is_saved', 'feedbacks', 'bookings'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'organizer', 'tickets_available', 'category_details']
         extra_kwargs = {
@@ -214,6 +216,24 @@ class EventDetailsSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated and request.user == obj.organizer:
             feedbacks = obj.feedbacks.all()  
             return FeedbackSerializer(feedbacks, many=True).data 
+        return []
+    
+    def get_bookings(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            bookedTickets = []
+            bookedTicketsInst = BookedTicket.objects.filter(ticket__user=request.user, ticket__event=obj, ticket__status="paid").order_by('-ticket__purchase_date')
+            for booking in bookedTicketsInst:
+                ticket = booking.ticket
+                
+                booking_details = {
+                    'booking_id': booking.id,
+                    'qr_code_data':booking.qr_code_data,
+                    'booked_at':ticket.purchase_date,
+                    'is_checked_in':booking.is_checked_in
+                }
+                bookedTickets.append(booking_details)
+            return bookedTickets
         return []
         
 

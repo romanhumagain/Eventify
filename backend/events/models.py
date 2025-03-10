@@ -75,8 +75,6 @@ class Event(models.Model):
 
     @property
     def tickets_available(self):
-        # Calculate available tickets (total tickets - tickets sold)
-        # Include "Cancelled" and "Reserved" as available tickets
         available_tickets = self.total_tickets - self.tickets_sold
         return available_tickets
 

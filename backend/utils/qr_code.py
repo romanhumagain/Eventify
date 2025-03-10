@@ -32,9 +32,31 @@ def send_qr_code_email(ticket_qr):
     subject = f"Your Ticket QR Code for {ticket.event.title}"
     payment_message = ""
     if not ticket.event.is_free:
-        payment_message = f"<p style='color: green; font-weight: bold;'>Your payment has been successfully made.</p>"
+        payment_message = f"""<p style='color: green; font-weight: bold;'>Your payment has been successfully made.</p>
+        <table style="border-collapse: collapse; width: 100%; margin-top: 10px;">
+    <tr>
+        <th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2;">Item</th>
+        <th style="border: 1px solid #ddd; padding: 8px; text-align: left; background-color: #f2f2f2;">Details</th>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Ticket Price</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">${ticket.unit_price}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Ticket Quantity</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">{ticket.quantity}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Total Price</td>
+        <td style="border: 1px solid #ddd; padding: 8px; font-weight: bold;">${ticket.unit_price * ticket.quantity}</td>
+    </tr>
+    <tr>
+        <td style="border: 1px solid #ddd; padding: 8px;">Transaction ID</td>
+        <td style="border: 1px solid #ddd; padding: 8px;">{ticket.payment.transaction_id}</td>
+    </tr>
+</table>
 
-
+        """
     message = f"""
     <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">

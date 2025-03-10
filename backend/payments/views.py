@@ -83,6 +83,7 @@ class CreatePaymentIntentView(APIView):
                                     'product_data': {
                                         'name': f"Ticket(s) for {event.title}",
                                         'description': f"{quantity} ticket(s) for {event.title}",
+                                        'images': [request.build_absolute_uri(event.banner.url)] if event.banner else []
                                     },
                                     'unit_amount': stripe_amount,
                                 },
