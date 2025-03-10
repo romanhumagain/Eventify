@@ -2,7 +2,6 @@ from django.db import models
 from authentication.models import User
 from events.models import Event
 
-
 class RSVP(models.Model):
     RSVP_STATUS_CHOICES = [
         ("interested", "Interested"),
@@ -15,7 +14,6 @@ class RSVP(models.Model):
     status = models.CharField(max_length=20, choices=RSVP_STATUS_CHOICES)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
     
     class Meta:
         unique_together = ("user", "event")

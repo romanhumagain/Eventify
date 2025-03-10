@@ -132,7 +132,7 @@ Cancels a reserved ticket if payment was not completed.
    - Redirect the user to the `checkout_url` from the response
    - Store `ticket_id` and `session_id` in local storage or state
 4. For free events:
-   - Display success message and QR code directly
+   - Display success message and QR code data directly
 
 ### After Stripe Checkout
 

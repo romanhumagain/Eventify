@@ -27,6 +27,8 @@ from rest_framework.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Case, When, Value, IntegerField
 from django.db.models import Max, F
+from django.db import models
+
 
 
 # to handle the event category
@@ -34,7 +36,6 @@ class EventCategoryViewSet(ModelViewSet):
     queryset = EventCategory.objects.all()
     serializer_class = EventCategorySerializer
     permission_classes = [IsSuperuserOrReadOnly]
-
 
 # to list the available events
 class EventListCreateAPIView(generics.ListCreateAPIView):
@@ -71,6 +72,8 @@ class EventListCreateAPIView(generics.ListCreateAPIView):
         event_type = self.request.query_params.get("event_type")
         is_free = self.request.query_params.get("is_free")
         location_filter = self.request.query_params.get("venue")
+        status_filter = self.request.query_params.get("status")
+
 
         # Search filter
         if search_query:
@@ -80,6 +83,23 @@ class EventListCreateAPIView(generics.ListCreateAPIView):
         if category_filter:
             queryset = queryset.filter(category__name__icontains=category_filter)
 
+        now = timezone.now()
+        if status_filter == "upcoming":
+            # Include both upcoming and active events
+            queryset = queryset.filter(
+                (models.Q(start_date__gt=now) |  # Upcoming events
+                 models.Q(start_date__lte=now, end_date__gte=now))  # Active events
+            )
+        elif status_filter == "active":
+            queryset = queryset.filter(
+                start_date__lte=now,
+                end_date__gte=now
+            )
+        elif status_filter == "expired":
+            queryset = queryset.filter(
+                end_date__lt=now
+            )
+            
         # Date filters
         if date_filter == "today":
             # Get the start and end of today in the current timezone
@@ -215,6 +235,16 @@ class EventRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         context = super().get_serializer_context()
         context["request"] = self.request
         return context
+    
+    def delete(self, request, *args, **kwargs):
+        event = self.get_object()
+        
+        if event.tickets.filter(status='paid').exists():
+            return Response(
+                {"error": "You cannot delete this event because user has already booked it."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().delete(request, *args, **kwargs)
 
 
 # for saving and unsaving events
@@ -244,9 +274,113 @@ class SavedEventListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return SavedEvent.objects.filter(
+        queryset = SavedEvent.objects.filter(
             user=self.request.user, event__is_approved=True
         ).order_by("-saved_at")
+        
+        # Get filters from query params
+        search_query = self.request.query_params.get("search")
+        category_filter = self.request.query_params.get("category")
+        date_filter = self.request.query_params.get("date")
+        event_type = self.request.query_params.get("event_type")
+        is_free = self.request.query_params.get("is_free")
+        location_filter = self.request.query_params.get("venue")
+        status_filter = self.request.query_params.get("status")
+        
+
+        # Search filter - apply to event title instead of SavedEvent
+        if search_query:
+            queryset = queryset.filter(event__title__icontains=search_query)
+            
+        # Category filter - apply to event's category
+        if category_filter:
+            queryset = queryset.filter(event__category__name__icontains=category_filter)
+
+        # Filter by event status (upcoming, active, expired)
+        now = timezone.now()
+        if status_filter == "upcoming":
+            # Include both upcoming and active events
+            queryset = queryset.filter(
+                (models.Q(event__start_date__gt=now) |  # Upcoming events
+                 models.Q(event__start_date__lte=now, event__end_date__gte=now))  # Active events
+            )
+        elif status_filter == "active":
+            queryset = queryset.filter(
+                event__start_date__lte=now,
+                event__end_date__gte=now
+            )
+        elif status_filter == "expired":
+            queryset = queryset.filter(
+                event__end_date__lt=now
+            )
+            
+        # Date filters - apply to event's start_date
+        if date_filter == "today":
+            today_start = timezone.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            today_end = today_start + timedelta(days=1)
+            queryset = queryset.filter(
+                event__start_date__gte=today_start, event__start_date__lt=today_end
+            )
+
+        elif date_filter == "tomorrow":
+            tomorrow_start = (timezone.now() + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
+            tomorrow_end = tomorrow_start + timedelta(days=1)
+            queryset = queryset.filter(
+                event__start_date__gte=tomorrow_start, event__start_date__lt=tomorrow_end
+            )
+
+        elif date_filter == "this_week":
+            now = timezone.now()
+            start_of_week = now.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ) - timedelta(days=now.weekday())
+            end_of_week = start_of_week + timedelta(days=7)
+            queryset = queryset.filter(
+                event__start_date__gte=start_of_week, event__start_date__lt=end_of_week
+            )
+
+        elif date_filter == "next_week":
+            now = timezone.now()
+            start_of_week = now.replace(
+                hour=0, minute=0, second=0, microsecond=0
+            ) - timedelta(days=now.weekday())
+            end_of_week = start_of_week + timedelta(days=14)  # Two weeks instead of one
+            queryset = queryset.filter(
+                event__start_date__gte=start_of_week, event__start_date__lt=end_of_week
+            )
+
+        elif date_filter == "this_month":
+            now = timezone.now()
+            start_of_month = now.replace(
+                day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+            if now.month == 12:
+                next_month = now.replace(year=now.year + 1, month=1, day=1)
+            else:
+                next_month = now.replace(month=now.month + 1, day=1)
+            queryset = queryset.filter(
+                event__start_date__gte=start_of_month, event__start_date__lt=next_month
+            )
+
+        # Event type filter - apply to event's event_type
+        if event_type == "remote":
+            queryset = queryset.filter(event__event_type__icontains="remote")
+        elif event_type == "physical":
+            queryset = queryset.filter(event__event_type__icontains="physical")
+
+        # Price filter - apply to event's is_free
+        if is_free is not None and is_free.lower() in ['true', 'false']:
+            queryset = queryset.filter(event__is_free=is_free.lower() == 'true')
+
+        # location filter - apply to event's venue
+        if location_filter:
+            queryset = queryset.filter(event__venue__icontains=location_filter)
+    
+        return queryset
 
 
 # to get all my booking 
@@ -256,7 +390,9 @@ class MyBookingAPIView(generics.ListAPIView):
     def get(self, request, *args, **kwargs):
 
         events_with_latest_booking = Event.objects.filter(
-            tickets__user=request.user
+            tickets__user=request.user, 
+            tickets__status="paid",
+            is_approved = True
         ).annotate(
             latest_booking_date=Max('tickets__purchase_date')
         ).order_by('-latest_booking_date').distinct()

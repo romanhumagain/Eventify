@@ -21,13 +21,7 @@ class CreatePaymentIntentView(APIView):
             
             try:
                 event = Event.objects.get(id=event_id)
-            
-                if event.tickets_available < quantity:
-                    return Response(
-                        {'error': f'Only {event.tickets_available} tickets available.'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                
+                 
             except Event.DoesNotExist:
                 return Response(
                     {'error': 'Event not found.'},
@@ -60,6 +54,12 @@ class CreatePaymentIntentView(APIView):
                     return Response(context, status=status.HTTP_200_OK)
                 
                 else:
+                    if event.tickets_available < quantity:
+                        return Response(
+                            {'error': f'Only {event.tickets_available} tickets available.'},
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
+                    
                     # For paid events, create a reservation first
                     ticket = Ticket.objects.create(
                         event=event,
@@ -83,7 +83,6 @@ class CreatePaymentIntentView(APIView):
                                     'product_data': {
                                         'name': f"Ticket(s) for {event.title}",
                                         'description': f"{quantity} ticket(s) for {event.title}",
-                                        'images': [request.build_absolute_uri(event.banner.url)] if event.banner else []
                                     },
                                     'unit_amount': stripe_amount,
                                 },

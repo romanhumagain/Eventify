@@ -5,6 +5,7 @@ from .models import BookedTicket
 from notification.models import Notification
 from utils.send_email import send_checked_in_email
 
+# to notify after checked-in 
 @receiver(post_save, sender=BookedTicket)
 def ticket_purchased_qr(sender, instance, created, **kwargs):
     if created:

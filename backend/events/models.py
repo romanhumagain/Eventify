@@ -36,7 +36,7 @@ class Event(models.Model):
     end_date = models.DateTimeField()
     booking_deadline = models.DateTimeField(null=True, blank=True)
 
-    total_tickets = models.PositiveIntegerField()
+    total_tickets = models.PositiveIntegerField(null=True, blank=True)
     is_free = models.BooleanField(default=False)
     ticket_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 

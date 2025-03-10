@@ -1,59 +1,9 @@
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated
-from .serializers import TicketSerializer, BookedTicketSerializer
-from events.models import Event
 from rest_framework import status
-from.models import Ticket, BookedTicket
-from utils.qr_code import _generate_qr_codes, send_qr_code_email
-from django.db import transaction
+from.models import  BookedTicket
 from django.utils import timezone
-
-# API view to handle the free tickets 
-class PurchaseFreeTicketAPIView(CreateAPIView):
-  permission_classes = [IsAuthenticated]
-  serializer_class = TicketSerializer
-  
-  def create(self, request, *args, **kwargs):
-    data = request.data
-    event_id = data.get('event')
-    quantity = data.get('quantity', 1)
-    
-    try:
-      event = Event.objects.get(id = event_id)
-    except Event.DoesNotExist:
-      return Response({'detail':"Event doesn't exists"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # check the ticket availability
-    available_tickets = event.total_tickets - event.tickets_sold
-    if available_tickets < quantity:
-       return Response({'detail': f"Only {available_tickets} tickets are available."}, status=status.HTTP_400_BAD_REQUEST)
-     
-    # Set unit_price and calculate total_price
-    data['unit_price'] = event.ticket_price
-    data['total_price'] = event.ticket_price * quantity
-    data['status'] = "paid"
-    serializer = self.get_serializer(data=data)
-    
-    if serializer.is_valid():
-      with transaction.atomic():
-        ticket = serializer.save(user = request.user)
-        bookedTicketQR = _generate_qr_codes(ticket=ticket)
-        send_qr_code_email(ticket_qr=bookedTicketQR)
-        
-        return Response({'detail':'Successfully purchased tickets'}, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-# to get the ticket history details 
-class TicketHistoryAPIView(ListAPIView):
-  permission_classes = [IsAuthenticated]
-  serializer_class = BookedTicketSerializer
-  
-  def get(self, request, *args, **kwargs):
-    bookedTickets = BookedTicket.objects.filter(ticket__user = request.user).order_by('is_checked_in')
-    serializer = self.get_serializer(bookedTickets, many = True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
 # to validate and checkin QR by the organizer
 class ValidateQRAPIView(CreateAPIView):
@@ -93,7 +43,7 @@ class ValidateQRAPIView(CreateAPIView):
         if event.end_date.date() < current_date:
             return Response({'detail': "This event has already passed"}, status=status.HTTP_400_BAD_REQUEST)
      
-        valid_statuses = ['reserved', 'paid']
+        valid_statuses = ['paid']
         if ticket_qr.ticket.status not in valid_statuses:
             return Response({
                 'detail': f"Ticket status is {ticket_qr.ticket.status}, which is not valid for check-in",
@@ -111,7 +61,12 @@ class ValidateQRAPIView(CreateAPIView):
             'ticket_info': {
                 'event_name': event.title,
                 'ticket_code': ticket_qr.ticket.ticket_code,
+                'ticket_quantity':ticket_qr.ticket.quantity,
+                'ticket_status':ticket_qr.ticket.status,
+                'purchase_date':ticket_qr.ticket.purchase_date,
                 'attendee_name': ticket_qr.ticket.user.username,
                 'check_in_time': ticket_qr.checked_in_time.strftime("%Y-%m-%d %H:%M:%S")
             }
         }, status=status.HTTP_200_OK)
+        
+        

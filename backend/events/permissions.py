@@ -7,7 +7,6 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
       
         return obj.organizer == request.user
 
-
 class IsSuperuserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:

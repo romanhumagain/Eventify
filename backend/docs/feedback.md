@@ -6,12 +6,6 @@
 ## Overview
 This API allows users to submit feedback for events, retrieve feedback, update their feedback, or delete it. Feedback is associated with events and users. Only authenticated users can access these endpoints.
 
-## Authentication
-All endpoints require the user to be authenticated. You must include an access token in the header of the request:
-```
-Authorization: Bearer <your_access_token>
-```
-
 ## Endpoints
 
 ### 1. **List and Create Feedback for an Event**
@@ -40,15 +34,15 @@ GET Response:
 ```json
 [
   {
-    "id": 1,
-    "event": 5,
-    "user": 7,
-    "message": "Great event, really enjoyed it!",
-    "created_at": "2024-03-04T12:00:00Z",
-    "user_details": {
-      "username": "john_doe",
-      "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
-    }
+    "id": 10,
+    "event": 17,
+    "user": {
+        "id": 16,
+        "profile_picture": null,
+        "username": "romanhumagain"
+    },
+    "message": "okey nice one",
+    "created_at": "2025-03-10T20:50:43.686396Z"
   }
 ]
 ```
@@ -56,15 +50,15 @@ GET Response:
 POST Response:
 ```json
 {
-  "id": 1,
-  "event": 5,
-  "user": 7,
-  "message": "Great event, really enjoyed it!",
-  "created_at": "2024-03-04T12:00:00Z",
-  "user_details": {
-    "username": "john_doe",
-    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
-  }
+    "id": 10,
+    "event": 17,
+    "user": {
+        "id": 16,
+        "profile_picture": null,
+        "username": "romanhumagain"
+    },
+    "message": "okey nice one",
+    "created_at": "2025-03-10T20:50:43.686396Z"
 }
 ```
 
@@ -91,15 +85,15 @@ POST Response:
 **Response for GET:**
 ```json
 {
-  "id": 1,
-  "event": 5,
-  "user": 7,
-  "message": "Great event, really enjoyed it!",
-  "created_at": "2024-03-04T12:00:00Z",
-  "user_details": {
-    "username": "john_doe",
-    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
-  }
+    "id": 10,
+    "event": 17,
+    "user": {
+        "id": 16,
+        "profile_picture": null,
+        "username": "romanhumagain"
+    },
+    "message": "okey nice one",
+    "created_at": "2025-03-10T20:50:43.686396Z"
 }
 ```
 
@@ -113,15 +107,15 @@ POST Response:
 **Response for PUT (Update):**
 ```json
 {
-  "id": 1,
-  "event": 5,
-  "user": 7,
-  "message": "It was an amazing event, would love to attend again!",
-  "created_at": "2024-03-04T12:00:00Z",
-  "user_details": {
-    "username": "john_doe",
-    "profile_picture": "http://127.0.0.1:8000/media/profile_pictures/john_doe.jpg"
-  }
+    "id": 10,
+    "event": 17,
+    "user": {
+        "id": 16,
+        "profile_picture": null,
+        "username": "romanhumagain"
+    },
+    "message": "okey nice one",
+    "created_at": "2025-03-10T20:50:43.686396Z"
 }
 ```
 
