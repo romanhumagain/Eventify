@@ -66,8 +66,6 @@ EXTERNAL_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'stripe',
     
-    # 'django_celery_results',
-    # 'django_celery_beat', 
 ]
 
 INSTALLED_APPS += EXTERNAL_APPS
@@ -182,8 +180,6 @@ AUTH_USER_MODEL = "authentication.User"
 
 ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["127.0.0.1"])
 
-# CORS (If using Django CORS Headers)
-# CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
 CORS_ALLOW_ALL_ORIGINS = env.bool("CORS_ALLOW_ALL_ORIGINS", default=False)
 
 
@@ -194,8 +190,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # for handling jwt token authentication
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=90),
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True

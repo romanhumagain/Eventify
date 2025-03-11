@@ -10,7 +10,6 @@ from payments.models import Payment
 import stripe
 from utils.qr_code import _generate_qr_codes, send_qr_code_email
 
-
 class CreatePaymentIntentView(APIView):
     permission_classes = [IsAuthenticated]
     
