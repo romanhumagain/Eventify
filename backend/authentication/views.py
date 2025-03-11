@@ -43,7 +43,12 @@ class LoginAPIView(APIView):
                     "detail": "User logged in successfully.",
                     "refresh_token": str(refresh),
                     "access_token": access_token,
-                    "is_organizer": user.is_organizer,
+                    "user":{
+                        "username": user.username,
+                        "email":    user.email, 
+                        "is_organizer": user.is_organizer,
+                        
+                    }
                 }
                 return Response(response_data, status=status.HTTP_200_OK)
 
@@ -75,7 +80,12 @@ class RegisterAPIView(APIView):
                     "detail": "User registered successfully.",
                     "refresh_token": str(refresh),
                     "access_token": access_token,
-                    "is_organizer": user.is_organizer,
+                    "user":{
+                        "username": user.username,
+                        "email":    user.email, 
+                        "is_organizer": user.is_organizer,
+                        
+                    }
                 }
                 return Response(response_data, status=status.HTTP_201_CREATED)
 

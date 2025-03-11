@@ -47,7 +47,11 @@
   "detail": "User registered successfully.",
   "refresh_token": "<refresh_token>",
   "access_token": "<access_token>",
-  "is_organizer": false
+  "user": {
+        "username": "john_doe",
+        "email": "johndoe@example.com",
+        "is_organizer": false
+    }
 }
 ```
 
@@ -93,7 +97,11 @@ If a user tries to register with an already existing username or email, the serv
   "detail": "User logged in successfully.",
   "refresh_token": "<refresh_token>",
   "access_token": "<access_token>",
-  "is_organizer": false
+  "user": {
+        "username": "username",
+        "email": "example@gmail.com",
+        "is_organizer": true
+    }
 }
 ```
 ### Error Responses for login
