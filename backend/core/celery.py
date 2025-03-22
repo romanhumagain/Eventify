@@ -1,21 +1,40 @@
-# # core/celery.py
+from __future__ import absolute_import, unicode_literals
+import os
+from celery import Celery
+from django.conf import settings
+from celery.schedules import crontab
 
-# from __future__ import absolute_import, unicode_literals
-# import os
-# from celery import Celery
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
 
-# # Set the default Django settings module for the 'celery' program.
-# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+app = Celery('core')
 
-# app = Celery('core')
+app.conf.enable_utc = False
+app.conf.update(
+                CELERY_WORKER_POOL='solo',
+                timezone='Asia/Kathmandu'
+                )
 
-# # Using a string here means the worker doesn’t have to serialize
-# # the configuration object to child processes.
-# # - namespace='CELERY' means all celery-related config keys should have a `CELERY_` prefix.
-# app.config_from_object('django.conf:settings', namespace='CELERY')
+app.config_from_object(settings, namespace='CELERY')
 
-# # Set Celery timezone to Nepal Time (Asia/Kathmandu)
-# app.conf.timezone = 'Asia/Kathmandu'
+app.conf.beat_schedule = {
+    
+    # Production schedule
+    'send-event-reminder': {
+        'task': 'events.tasks.send_event_reminder', 
+        'schedule': crontab(minute=0, hour=0),   # Run at 12:00 AM (midnight)
+    },
+    
+    # 'test-event-reminder-at-10:45pm': {
+    #     'task': 'events.tasks.send_event_reminder',
+    #     'schedule': crontab(minute=45, hour=22), 
+    # },
+}
 
-# # Load task modules from all registered Django app configs.
-# app.autodiscover_tasks()
+
+app.conf.broker_connection_retry_on_startup = True
+
+app.autodiscover_tasks()
+
+@app.task(bind=True)
+def debug_task(self):
+    print(f'Request: {self.request!r}')

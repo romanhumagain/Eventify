@@ -66,6 +66,9 @@ EXTERNAL_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'stripe',
     
+    'django_celery_beat',
+    'django_celery_results'
+    
 ]
 
 INSTALLED_APPS += EXTERNAL_APPS
@@ -225,3 +228,23 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS", default=True)
 
  
+# Celery settings
+CELERY_BROKER_URL = env("CELERY_BROKER_URL")
+
+accept_content = ['json']
+result_serializer = 'json'
+task_serializer = 'json'
+result_backend = 'django-db'
+timezone = 'Asia/Kathmandu'
+
+broker_connection_retry_on_startup = True
+
+# Celery Beat Scheduler
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
+
+# command to run celery
+"""
+celery -A core worker --loglevel=info
+celery -A core beat --loglevel=info
+"""

@@ -25,7 +25,23 @@ All endpoints are prefixed with: `/api/events/`
 | `/api/events/my-events/`          | GET    | List events created by the authenticated user  | Yes                    |
 | `/api/events/my-bookings/`        | GET    | List events booked by the authenticated user   | Yes                    |
 | `/api/events/saved/`              | GET    | List events saved by the authenticated user    | Yes                    |
-| `/api/events/toggle-save/{event_id}/`   | POST   | Save or unsave an event                        | Yes                    |
+| `/api/events/toggle-save/{event_id}/`   | POST   | Save or unsave an event                   | Yes                    |
+| `/api/events/send-invitation/`          |POST    | Send invitation                           | YES                      |
+
+
+### Request Body for `/api/events/send-invitation/`
+
+```json
+{
+  "event_id": 17,
+  "email": [
+    "email1@gmail.com",
+    "email2@gmail.com",
+    "email3@gmail.com"
+  ]
+}
+
+
 
 ## Event Categories
 

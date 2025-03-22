@@ -1,10 +1,12 @@
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-
+from django.utils import timezone
 from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
+from django.core.mail import send_mail
+import threading
+
 
 # Sends an approval email to the event organizer when their event is approved.
 def send_event_approval_mail(event_title, organizer):
@@ -305,3 +307,119 @@ def send_event_update_email(user, event):
 
     except Exception as e:
         print(f"❌ Error: Failed to send event update email to {user.email}. Reason: {str(e)}")
+
+
+def send_event_invitation_email(recipient_emails, event):
+    
+    subject = f"📅 You're Invited: {event.title} by {event.organizer.username}"
+    event_url = f"{settings.VITE_BASE_URL}/events/{event.id}"
+    
+    html_message = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Event Invitation</title>
+        <style>
+            @media only screen and (max-width: 600px) {{
+                .container {{
+                    width: 100% !important;
+                    padding: 20px !important;
+                }}
+                .content {{
+                    padding: 20px !important;
+                }}
+                .details-box {{
+                    padding: 20px !important;
+                }}
+                h2 {{
+                    font-size: 20px !important;
+                }}
+            }}
+        </style>
+    </head>
+    <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; background-color: #f9f9f9; padding: 20px; margin: 0;">
+        <div class="container" style="background-color: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1); max-width: 600px; margin: 0 auto;">
+            <h2 style="text-align: center; color: #1E90FF; font-size: 24px; font-weight: bold; margin-bottom: 25px;">You're Invited to {event.title} 🎉</h2>
+
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                We are excited to invite you to the event <strong style="color: #1E90FF;">{event.title}</strong> hosted by {event.organizer.username}. Please find the event details below.
+            </p>
+            
+            <div class="details-box" style="margin: 25px 0; background-color: #f8fbff; padding: 25px; border-radius: 12px; border-left: 4px solid #1E90FF;">
+                <h3 style="font-size: 20px; color: #333; font-weight: bold; margin-top: 0; margin-bottom: 20px;">Event Details</h3>
+                
+                <div style="margin-bottom: 20px; display: block;">
+                    <p style="font-size: 16px; color: #1E90FF; margin: 10px 0; font-weight: bold;">📅 Event Date</p>
+                    <p style="font-size: 16px; color: #555; margin: 5px 0; padding-left: 10px; border-left: 2px solid #e0e0e0;">{event.start_date.strftime('%B %d, %Y - %I:%M %p')}</p>
+                </div>
+                
+                <div style="margin-bottom: 20px; display: block;">
+                    <p style="font-size: 16px; color: #1E90FF; margin: 10px 0; font-weight: bold;">📍 Venue</p>
+                    <p style="font-size: 16px; color: #555; margin: 5px 0; padding-left: 10px; border-left: 2px solid #e0e0e0;">{event.venue if event.event_type == "physical" else "Online Event"}</p>
+                </div>
+                
+                <div style="margin-bottom: 10px; display: block;">
+                    <p style="font-size: 16px; color: #1E90FF; margin: 10px 0; font-weight: bold;">ℹ️ Event Details</p>
+                    <p style="font-size: 16px; color: #555; margin: 5px 0; padding-left: 10px; border-left: 2px solid #e0e0e0;">{event.details if event.details else "No additional details provided."}</p>
+                </div>
+        
+            </div>
+
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                We're excited to have you join us! For more details, click the button below.
+            </p>
+
+            <p style="font-size: 16px; color: #555; line-height: 1.6;">
+                See you at the event! 😊
+            </p>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{event_url}" 
+                   style="background-color: #1E90FF; color: #ffffff; text-decoration: none; 
+                          display: inline-block; padding: 12px 30px; font-weight: 500; 
+                          border-radius: 4px; font-size: 16px;">
+                    View Event Details
+                </a>
+            </div>
+            
+            <footer style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 12px; color: #aaa;">
+                <p style="margin: 5px 0;">&copy; {timezone.now().year} Eventify. All rights reserved.</p>
+            </footer>
+        </div>
+    </body>
+    </html>
+    """
+
+    plain_message = f"""
+    You're Invited: {event.title}
+
+    Hello,
+
+    You have been invited to an event hosted by {event.organizer.username}.
+
+    📍 Venue: {event.venue if event.event_type == "physical" else "Online Event"}
+    📅 Date & Time: {event.start_date.strftime("%B %d, %Y at %I:%M %p")}
+    ℹ️ Event Details: {event.details if event.details else "No additional details provided."}
+
+    View event details here: {event_url}
+    """
+    
+    def send_email():
+        try:
+            send_mail(
+                subject,
+                plain_message,
+                settings.EMAIL_HOST_USER,
+                recipient_emails,
+                html_message=html_message,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Error sending email: {e}")
+
+    email_thread = threading.Thread(target=send_email)
+    email_thread.start()
+    return True

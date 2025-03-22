@@ -1,7 +1,14 @@
 from django.urls import path
 from rest_framework import routers
-from .views import EventCategoryViewSet, EventListCreateAPIView, EventRetrieveUpdateDestroyView, MyEventListAPIView, SavedEventListAPIView, SavedEventToggleAPIView, MyBookingAPIView
-
+from .views import (EventCategoryViewSet, 
+                    EventListCreateAPIView, 
+                    EventRetrieveUpdateDestroyView, 
+                    MyEventListAPIView, 
+                    SavedEventListAPIView, 
+                    SavedEventToggleAPIView, 
+                    MyBookingAPIView, 
+                    EventInvitationAPIView
+)
 router = routers.DefaultRouter()
 router.register(r'categories', EventCategoryViewSet)
 
@@ -14,6 +21,7 @@ urlpatterns = [
     
     path('saved/', SavedEventListAPIView.as_view(), name='saved-events-list'),
     path('toggle-save/<int:event_id>/', SavedEventToggleAPIView.as_view(), name='toggle-save-event'),
+    path('send-invitation/', EventInvitationAPIView.as_view(), name='send_invitation')
 ]
 
 urlpatterns += router.urls
