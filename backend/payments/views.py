@@ -89,7 +89,7 @@ class CreatePaymentIntentView(APIView):
                             }],
                             mode='payment',
                             success_url=f"{settings.VITE_BASE_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}&ticket_id={ticket.id}",
-                            cancel_url=f"{settings.VITE_BASE_URL}/payment/cancel?ticket_id={ticket.id}",
+                            cancel_url=f"{settings.VITE_BASE_URL}/",
                             metadata={
                                 'ticket_id': str(ticket.id),
                                 'ticket_code': str(ticket.ticket_code),
