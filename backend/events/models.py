@@ -80,6 +80,7 @@ class Event(models.Model):
             return available_tickets
         if not self.total_tickets and self.is_free:
             return None
+        return 0
 
     def __str__(self):
         return f"{self.title} organized by {self.organizer.username}"
