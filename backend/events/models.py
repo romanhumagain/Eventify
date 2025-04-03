@@ -75,8 +75,11 @@ class Event(models.Model):
 
     @property
     def tickets_available(self):
-        available_tickets = self.total_tickets - self.tickets_sold
-        return available_tickets
+        if self.total_tickets :
+            available_tickets = self.total_tickets - self.tickets_sold
+            return available_tickets
+        if not self.total_tickets and self.is_free:
+            return None
 
     def __str__(self):
         return f"{self.title} organized by {self.organizer.username}"
