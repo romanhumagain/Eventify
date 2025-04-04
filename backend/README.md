@@ -123,7 +123,7 @@ python manage.py migrate authentication
 Then migrate the rest of the applications:
 
 ```bash
-python manage.py makemigrations
+python manage.py makemigrations authentication events feedback notification payments rsvp tickets
 python manage.py migrate
 ```
 
